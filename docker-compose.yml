@@ -1,0 +1,43 @@
+services:
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka_server_app
+    ports:
+      - "8761:8761"
+    networks:
+      - metamind-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_personal_dev
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: your_root_password # Substitua pela sua senha
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - metamind-network
+
+  usuario-service:
+    build: ./usuario-service
+    container_name: usuario_service_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+      - eureka-server
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://root:your_root_password@mongodb:27017/personal_dev?authSource=admin
+      SPRING_DATA_MONGODB_DATABASE: personal_dev
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka
+    networks:
+      - metamind-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  metamind-network:
+    driver: bridge
